@@ -27,7 +27,8 @@ body {
 </header>
 
 <div id="uiConf" class="text-center">
-	<button id="btn-play" type="button" class="Button Button--primary Button--medium">Say some number</button>
+	<button id="btn-play-new" type="button" class="Button Button--primary Button--medium">Say some number</button>
+	<button id="btn-repeat" type="button" class="Button Button--secondary Button--medium">Repeat</button>
 	<div class="Select">
 		<label for="selectSimple" class="Select__label">Choose language:</label>
 		<div class="Select__inputContainer">
@@ -74,7 +75,6 @@ function getVoicesList() {
 function populateVoiceList() {
 	voices = getVoicesList();
 
-	// Voice list sometimes does not work immidiatelly after page loading, better check
 	if (voices != null) {
 		let select = document.getElementById("slc-voices");
 
@@ -84,49 +84,79 @@ function populateVoiceList() {
 
 			let optEl = document.createElement("option");
 
-			optEl.textContent = voices[voice].name + " # " + voices[voice].lang;
+			optEl.textContent = `${voices[voice].name} # ${voices[voice].lang}`;
 			optEl.value = voice;
 
 			select.appendChild(optEl);
 		}
+
+		// Set select element to value from last session when available
+		if (localStorage.getItem("nums123")) {
+			let savedConf = JSON.parse(localStorage.getItem("nums123"));
+			let lastIndex = Number(savedConf.selection);
+
+			select.value = lastIndex;	
+		}
+	}
+	// Sometimes speechSynthesis.getVoices() does not work immitiatelly, we can schedule here to call it a little it later when ready
+	else if (window.speechSynthesis.onvoiceschanged !== undefined) {
+		speechSynthesis.onvoiceschanged = populateVoiceList;
 	}
 }
 
 function randInt() {
-	return Math.floor(Math.random()*1000); //
+	return Math.floor(Math.random()*1000); // 0-999
+}
+
+function getSelectedVoiceIndex() {
+	let voiceIndex = Number(document.getElementById("slc-voices").value);
+	return voiceIndex;	
+}
+
+function getSelectedVoiceObj() {
+	let voice = voices[getSelectedVoiceIndex()];
+	return voice;
 }
 
 function playNew() {
 	let newNumber = randInt();
-
 	console.info(newNumber);
-	let sayThis = new SpeechSynthesisUtterance(newNumber);
-
-	let voiceIndex = new Number(document.getElementById("slc-voices").value);
-	sayThis.voice = voices[voiceIndex];
-
-	window.speechSynthesis.speak(sayThis);
-
-	let clpsEl = document.getElementById("CollapseOutput");
-	let clps = window["spirit-web"].Collapse.getOrCreateInstance(clpsEl); // FIXME is this correct??? ;-(((
-	clps.hide(); // FIXME does not work
 	writeResult(newNumber);
+
+	lastNumber = newNumber;
+	sayIt(newNumber, getSelectedVoiceObj());
+}
+
+function sayIt(number, voice) {
+	let sayThis = new SpeechSynthesisUtterance(number);
+	sayThis.voice = voice;
+	window.speechSynthesis.speak(sayThis);
 }
 
 function writeResult(number) {
-	lastNumber = number;
+	let clpsEl = document.getElementById("CollapseOutput");
+	let clps = window["spirit-web"].Collapse.getOrCreateInstance(clpsEl); // FIXME is this correct??? ;-(((
+	clps.hide(); // FIXME does not work
+
 	document.getElementById("results").innerText = String(number);
 }
 
 function initUI() {
 	populateVoiceList();
 
-	document.getElementById("btn-play").addEventListener("click", (event) => {
+	document.getElementById("btn-play-new").addEventListener("click", (event) => {
 		if (!voices) {
 			populateVoiceList();
 		}
 
 		playNew();
+		return false;
+	});
+
+	document.getElementById("btn-repeat").addEventListener("click", (event) => {
+		if (lastNumber && voices) {
+			sayIt(lastNumber, getSelectedVoiceObj());
+		}
 		return false;
 	});
 
@@ -137,7 +167,13 @@ function initUI() {
 	});
 
 	document.getElementById("slc-voices").addEventListener("change", (event) => {
-		// TODO preserve value between sessions
+		if (lastNumber && voices) {
+			sayIt(lastNumber, getSelectedVoiceObj());
+		}
+
+		// preserve selected voice between sessions
+		// (to make is easier we assume here that the list of voice did not change between sessions)
+		localStorage.setItem("nums123", JSON.stringify( { selection: getSelectedVoiceIndex() } ));
 	});
 }
 
