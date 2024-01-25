@@ -49,6 +49,13 @@ body {
 	</div>
 </div>
 
+<div id="uiLearning" class="text-center mt-800 mb-800">
+	<button id="btn-teach-1-10" type="button" class="Button Button--tertiary Button--medium" role="button" data-nums123-value="1 2 3 4 5 6 7 8 9 10">Teach me 1-10</button>
+	<button id="btn-teach-11-20" type="button" class="Button Button--tertiary Button--medium" role="button" data-nums123-value="11, 12, 13, 14, 15, 16, 17, 18, 19, 20">Teach me 11-20</button>
+	<button id="btn-teach-10-100" type="button" class="Button Button--tertiary Button--medium" role="button" data-nums123-value="10, 20, 30, 40, 50, 60, 70, 80, 90, 100">Teach me 10-100</button>
+	<button id="btn-teach-more" type="button" class="Button Button--tertiary Button--medium" role="button" data-nums123-value="0, 10, 100, 1000, 10000, 100000, 1000000, 1000000000, 1000000000000">Teach me more</button>
+</div>
+
 <script type="text/javascript">
 "use strict";
 let voices;
@@ -127,8 +134,12 @@ function playNew() {
 	sayIt(newNumber, getSelectedVoiceObj());
 }
 
-function sayIt(number, voice) {
-	let sayThis = new SpeechSynthesisUtterance(number);
+function sayItWithSelectedVoice(text) {
+	sayIt(text, getSelectedVoiceObj());
+}
+
+function sayIt(text, voice) {
+	let sayThis = new SpeechSynthesisUtterance(text);
 	sayThis.voice = voice;
 	window.speechSynthesis.speak(sayThis);
 }
@@ -155,9 +166,22 @@ function initUI() {
 
 	document.getElementById("btn-repeat").addEventListener("click", (event) => {
 		if (lastNumber && voices) {
-			sayIt(lastNumber, getSelectedVoiceObj());
+			sayItWithSelectedVoice(lastNumber);
 		}
 		return false;
+	});
+
+
+	// one universal handler to handle all teaching buttons
+	["btn-teach-1-10", "btn-teach-11-20", "btn-teach-10-100", "btn-teach-more"].forEach((element) => {
+
+		document.getElementById(element).addEventListener("click", (event) => {
+			if (voices) {
+				sayItWithSelectedVoice(event.target.dataset.nums123Value);
+			}
+			return false;
+		});
+
 	});
 
 	document.getElementById("slc-voices").addEventListener("focus", (event) => {
@@ -168,7 +192,7 @@ function initUI() {
 
 	document.getElementById("slc-voices").addEventListener("change", (event) => {
 		if (lastNumber && voices) {
-			sayIt(lastNumber, getSelectedVoiceObj());
+			sayItWithSelectedVoice(lastNumber);
 		}
 
 		// preserve selected voice between sessions
