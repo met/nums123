@@ -1,5 +1,7 @@
 <!doctype html>
+<meta charset="utf-8">
 <title>Nums123 - Learn to count in multiple languages</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@lmc-eu/spirit-web@latest/css/foundation.min.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@lmc-eu/spirit-web@latest/css/components.min.css" />
@@ -141,6 +143,7 @@ function sayItWithSelectedVoice(text) {
 function sayIt(text, voice) {
 	let sayThis = new SpeechSynthesisUtterance(text);
 	sayThis.voice = voice;
+	sayThis.lang = voice.lang; // this is important for Chrome on Android, without this Chrome ignores voice setting using always default voice
 	window.speechSynthesis.speak(sayThis);
 }
 
