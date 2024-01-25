@@ -1,0 +1,153 @@
+<!doctype html>
+<title>Nums123 - Learn to count in multiple languages</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@lmc-eu/spirit-web@latest/css/foundation.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@lmc-eu/spirit-web@latest/css/components.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@lmc-eu/spirit-web@latest/css/utilities.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@lmc-eu/spirit-web@latest/css/components.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/@lmc-eu/spirit-web@latest/js/bundle/spirit-web.bundle.js" async></script>
+<style>
+body {
+	background-color: #FDFDF1;
+}
+</style>
+<body>
+
+<header class="Header Header--simple">
+	<a href="./">
+		<img src="logo.png" alt="Nums123 logo" width="80" />
+	</a>
+
+	<h1 class="text-center">Nums123 (beta)</h1>
+
+	<!--nav class="HeaderDesktopActions HeaderDesktopActions--primary">
+	  <a href="#" class="HeaderLink">About</a>
+	  <a href="#" class="HeaderLink">Contacy</a>
+	</nav-->
+</header>
+
+<div id="uiConf" class="text-center">
+	<button id="btn-play" type="button" class="Button Button--primary Button--medium">Say some number</button>
+	<div class="Select">
+		<label for="selectSimple" class="Select__label">Choose language:</label>
+		<div class="Select__inputContainer">
+			<select id="slc-voices" class="Select__input"></select>
+			<div class="Select__icon">
+				<svg width="24" height="24" aria-hidden="true">
+					<use xlink:href="sprite.svg#chevron-down" />
+				</svg>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="uiOutput" class="text-center mt-800 mb-800">
+	<button type="button" class="Button Button--informative Button--medium" role="button" data-spirit-toggle="collapse" data-spirit-target="CollapseOutput">Show me the number</button>
+	<div id="CollapseOutput" class="Collapse">
+		<div class="Collapse__content" id="results">not yet ... press <em>Say some number</em> first</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+"use strict";
+let voices;
+let lastNumber;
+
+function detectSupport() {
+	if (window.speechSynthesis)
+		return true;
+	else
+		return false;
+}
+
+function getVoicesList() {
+	let list = window.speechSynthesis.getVoices();
+
+	if (list != null && list.length > 0)
+		return list;
+	else {
+		console.warn("Cannot obtain list of voices.");
+		return null;
+	}
+}
+
+function populateVoiceList() {
+	voices = getVoicesList();
+
+	// Voice list sometimes does not work immidiatelly after page loading, better check
+	if (voices != null) {
+		let select = document.getElementById("slc-voices");
+
+		for (let voice in voices) {
+			//console.log(voice);
+			//console.log(voices[voice]);
+
+			let optEl = document.createElement("option");
+
+			optEl.textContent = voices[voice].name + " # " + voices[voice].lang;
+			optEl.value = voice;
+
+			select.appendChild(optEl);
+		}
+	}
+}
+
+function randInt() {
+	return Math.floor(Math.random()*1000); //
+}
+
+function playNew() {
+	let newNumber = randInt();
+
+	console.info(newNumber);
+	let sayThis = new SpeechSynthesisUtterance(newNumber);
+
+	let voiceIndex = new Number(document.getElementById("slc-voices").value);
+	sayThis.voice = voices[voiceIndex];
+
+	window.speechSynthesis.speak(sayThis);
+
+	let clpsEl = document.getElementById("CollapseOutput");
+	let clps = window["spirit-web"].Collapse.getOrCreateInstance(clpsEl); // FIXME is this correct??? ;-(((
+	clps.hide(); // FIXME does not work
+	writeResult(newNumber);
+}
+
+function writeResult(number) {
+	lastNumber = number;
+	document.getElementById("results").innerText = String(number);
+}
+
+function initUI() {
+	populateVoiceList();
+
+	document.getElementById("btn-play").addEventListener("click", (event) => {
+		if (!voices) {
+			populateVoiceList();
+		}
+
+		playNew();
+		return false;
+	});
+
+	document.getElementById("slc-voices").addEventListener("focus", (event) => {
+		if (!voices) {
+			populateVoiceList();
+		}
+	});
+
+	document.getElementById("slc-voices").addEventListener("change", (event) => {
+		// TODO preserve value between sessions
+	});
+}
+
+if (!detectSupport()) {
+	console.error("This browser is not compatible");
+}
+else {
+	document.addEventListener("DOMContentLoaded", (argument) => {
+		initUI();
+	});
+}
+</script>
+</body>
