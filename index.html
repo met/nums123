@@ -40,6 +40,11 @@ footer a {
 		<div class="Select__helperText">Cannot see language you are learning? Install its voice in your system.</div>
 	</div>
 
+	<div class="mt-200">
+		<label for="range-speed">Change voice speed if necessary:</label>
+		<input id="range-speed" type="range" min="0.5" max="1" value="1" step="0.1">
+	</div>
+
 	<div class="mt-600">
 		<button id="btn-play-new-10" type="button" class="Button Button--primary Button--medium mr-200 mb-200" data-nums123-value="10">Say 1-10</button>
 		<button id="btn-play-new-20" type="button" class="Button Button--primary Button--medium mr-200 mb-200" data-nums123-value="20">Say 1-20</button>
@@ -102,7 +107,7 @@ function populateVoiceList() {
 
 			let optEl = document.createElement("option");
 
-			optEl.textContent = `${appState.voices[voice].name} # ${appState.voices[voice].lang}`;
+			optEl.textContent = `${appState.voices[voice].lang} :: ${appState.voices[voice].name}`;
 			optEl.value = voice;
 
 			select.appendChild(optEl);
@@ -141,7 +146,7 @@ function playNew(maximum = 1000) {
 	let newNumber = randInt(maximum);
 	console.info(newNumber);
 	collapseResultIfOpened();
-	setTimeout(() => {writeResult(newNumber) }, 200); // little timeout is needed, otherwise user see new number before collapsing
+	setTimeout(() => {writeResult(newNumber) }, 200); // small timeout is needed, otherwise user could see new number before collapsing
 
 	appState.lastNumber = newNumber;
 	sayItWithSelectedVoice(newNumber);
@@ -154,7 +159,13 @@ function sayItWithSelectedVoice(text) {
 function sayIt(text, voice) {
 	let sayThis = new SpeechSynthesisUtterance(text);
 	sayThis.voice = voice;
-	sayThis.lang = voice.lang; // this is important for Chrome on Android, without this Chrome ignores voice setting using always default voice
+	sayThis.lang = voice.lang; // This is IMPORTANT for Chrome on Android, without this Chrome ignores voice setting and use always default voice
+	sayThis.rate = Number(document.getElementById("range-speed").value);
+	//console.log(sayThis.rate);
+
+	//sayThis.addEventListener("start", (event) => { console.log(event) });
+	//sayThis.addEventListener("end", (event) => { console.log(event) });
+
 	window.speechSynthesis.speak(sayThis);
 }
 
