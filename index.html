@@ -45,7 +45,7 @@ body {
 </div>
 
 <div id="uiOutput" class="text-center mt-800 mb-800">
-	<button type="button" class="Button Button--informative Button--medium" role="button" data-spirit-toggle="collapse" data-spirit-target="CollapseOutput">Show me the number</button>
+	<button id="btn-reveal" type="button" class="Button Button--informative Button--medium" role="button" data-spirit-toggle="collapse" data-spirit-target="CollapseOutput">Reveal me the number</button>
 	<div id="CollapseOutput" class="Collapse">
 		<div class="Collapse__content" id="results">not yet ... press <em>Say some number</em> first</div>
 	</div>
@@ -130,7 +130,8 @@ function getSelectedVoiceObj() {
 function playNew() {
 	let newNumber = randInt();
 	console.info(newNumber);
-	writeResult(newNumber);
+	collapseResultIfOpened();
+	setTimeout(() => {writeResult(newNumber) }, 200); // little timeout is needed, otherwise user see new number before collapsing
 
 	lastNumber = newNumber;
 	sayIt(newNumber, getSelectedVoiceObj());
@@ -147,11 +148,14 @@ function sayIt(text, voice) {
 	window.speechSynthesis.speak(sayThis);
 }
 
-function writeResult(number) {
-	let clpsEl = document.getElementById("CollapseOutput");
-	let clps = window["spirit-web"].Collapse.getOrCreateInstance(clpsEl); // FIXME is this correct??? ;-(((
-	clps.hide(); // FIXME does not work
+function collapseResultIfOpened() {
+	let clps = window["spirit-web"].Collapse.getInstance("#btn-reveal");
+	if (clps.state.open) {
+		clps.hide();
+	}
+}
 
+function writeResult(number) {
 	document.getElementById("results").innerText = String(number);
 }
 
